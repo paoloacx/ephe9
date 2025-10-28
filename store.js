@@ -1,5 +1,5 @@
 /*
- * store.js (v4.10 - Corregido id: null al guardar)
+ * store.js (v4.10.1 - Debugging image upload)
  * Módulo de Lógica de Firestore y Storage.
  */
 
@@ -279,6 +279,8 @@ async function deleteMemory(diaId, memId, imagenURL) {
 
 async function uploadImage(file, userId, diaId) {
     if (!file || !userId || !diaId) {
+        // Log si faltan datos
+        console.error("uploadImage Error: Faltan datos", { file, userId, diaId });
         throw new Error("Faltan datos (archivo, userId o diaId) para subir la imagen.");
     }
 
@@ -287,13 +289,23 @@ async function uploadImage(file, userId, diaId) {
     const storagePath = `images/${userId}/${uniqueName}`;
     const imageRef = ref(storage, storagePath);
 
-    console.log(`Store: Subiendo imagen a: ${storagePath}`);
+    console.log(`[uploadImage] Intentando subir a: ${storagePath}`); // <-- Log 1
 
-    const snapshot = await uploadBytes(imageRef, file);
-    const downloadURL = await getDownloadURL(snapshot.ref);
+    try {
+        const snapshot = await uploadBytes(imageRef, file);
+        console.log("[uploadImage] uploadBytes completado. Snapshot:", snapshot); // <-- Log 2
 
-    console.log("Store: Imagen subida, URL:", downloadURL);
-    return downloadURL;
+        const downloadURL = await getDownloadURL(snapshot.ref);
+        console.log("[uploadImage] getDownloadURL completado. URL:", downloadURL); // <-- Log 3
+
+        return downloadURL; // Devuelve la URL
+
+    } catch (error) {
+        // Capturar y loguear cualquier error durante la subida o la obtención de URL
+        console.error(`[uploadImage] Error durante subida/obtención de URL a ${storagePath}:`, error);
+        // Relanzar el error para que handleSaveMemorySubmit lo sepa
+        throw new Error(`Error al subir imagen: ${error.message}`);
+    }
 }
 
 
