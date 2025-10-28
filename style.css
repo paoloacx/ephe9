@@ -1,4 +1,4 @@
-/* style.css - v17.2 - Arreglo Inputs y Almacén */
+/* style.css - v17.3 - Ajuste color header y tamaño Crumbie */
 @charset "UTF-8";
 
 /* --- Base y Fondo --- */
@@ -39,7 +39,7 @@ header {
 header h1 {
     margin: 0;
     font-size: 20px;
-    color: #4a5462;
+    color: #333333; /* CAMBIO: Color más oscuro */
     font-weight: bold;
     text-shadow: 0 1px 0 rgba(255,255,255,0.6);
     flex-grow: 1;
@@ -972,8 +972,8 @@ a:hover { text-decoration: underline; }
   position: fixed;
   bottom: 100px;
   right: 24px;
-  width: 72px;
-  height: 72px;
+  width: 50px; /* CAMBIO: Reducido */
+  height: 50px; /* CAMBIO: Reducido */
   border: none;
   border-radius: 50%; /* 🔵 botón completamente redondo */
   background-image: url('crumbie1.png');
@@ -997,7 +997,7 @@ a:hover { text-decoration: underline; }
 /* --- Animación de texto flotante de Crumbie --- */
 .crumbie-float-text {
     position: fixed;
-    bottom: 180px; /* Justo encima de Crumbie (100px + 72px) */
+    bottom: 160px; /* CAMBIO: Ajustado a 100px + 50px + 10px padding */
     right: 24px;
     padding: 5px 10px;
     background: rgba(0,0,0,0.7);
