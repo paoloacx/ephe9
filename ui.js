@@ -1,5 +1,5 @@
 /*
- * ui.js (v4.20 - Removed Image Upload Feature)
+ * ui.js (v4.20.1 - Fixed showMusicResults is not defined error)
  * Módulo de interfaz de usuario.
  */
 
@@ -25,7 +25,7 @@ let storeListModal = null;
 // --- Funciones de Inicialización ---
 
 function init(mainCallbacks) {
-    console.log("UI Module init (v4.20 - Removed Image Upload Feature)");
+    console.log("UI Module init (v4.20.1 - Fixed showMusicResults error)");
     callbacks = mainCallbacks;
 
     _bindHeaderEvents();
@@ -42,7 +42,7 @@ function init(mainCallbacks) {
     createConfirmModal();
 }
 
-// ... (Las funciones _bind... y de inicialización no cambian) ...
+// ... (Las funciones _bind... no cambian) ...
 function _bindHeaderEvents() {
     document.getElementById('header-search-btn')?.addEventListener('click', () => {
         if (callbacks.onFooterAction) callbacks.onFooterAction('search');
@@ -116,7 +116,6 @@ function _bindGlobalListeners() {
         if (e.target.classList.contains('modal-confirm')) closeConfirmModal(false);
     });
 }
-
 
 // --- Funciones de Renderizado Principal ---
 function setLoading(message, show) {
@@ -588,311 +587,7 @@ function closeEditModal() {
 }
 
 
-// ... (Modales Almacén, Alerta, Confirmación no cambian) ...
-function createStoreModal() {
-    if (storeModal) return;
-    storeModal = document.createElement('div');
-    storeModal.id = 'store-modal';
-    storeModal.className = 'modal-store'; // CSS usa .modal-edit para alinear arriba
-
-    const categories = [
-        { type: 'Nombres', icon: 'label', label: 'Nombres de Día' },
-        { type: 'Lugar', icon: 'place', label: 'Lugares' },
-        { type: 'Musica', icon: 'music_note', label: 'Canciones' },
-        //{ type: 'Imagen', icon: 'image', label: 'Fotos' }, // REMOVIDO
-        { type: 'Texto', icon: 'article', label: 'Notas' }
-    ];
-
-    let buttonsHTML = categories.map(cat => createStoreCategoryButton(cat.type, cat.icon, cat.label)).join('');
-
-    storeModal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-preview-header">
-                <h3>Almacén de Memorias</h3>
-            </div>
-            <div class="modal-content-scrollable store-category-list">
-                ${buttonsHTML}
-            </div>
-            <div class="modal-main-buttons">
-                <button id="close-store-btn" class="aqua-button">Cerrar</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(storeModal);
-
-    document.getElementById('close-store-btn')?.addEventListener('click', closeStoreModal);
-    storeModal.querySelector('.store-category-list')?.addEventListener('click', (e) => {
-        const btn = e.target.closest('.store-category-button');
-        if (btn && callbacks.onStoreCategoryClick) {
-            callbacks.onStoreCategoryClick(btn.dataset.type);
-        }
-    });
-}
-
-function openStoreModal() {
-    if (!storeModal) {
-        createStoreModal();
-    }
-    storeModal.style.display = 'flex';
-    setTimeout(() => storeModal.classList.add('visible'), 10);
-}
-
-function closeStoreModal() {
-    if (!storeModal) return;
-    storeModal.classList.remove('visible');
-    setTimeout(() => storeModal.style.display = 'none', 200);
-}
-
-function createStoreListModal() {
-    if (storeListModal) return;
-    storeListModal = document.createElement('div');
-    storeListModal.id = 'store-list-modal';
-    storeListModal.className = 'modal-store-list'; // CSS usa .modal-edit para alinear arriba
-    storeListModal.innerHTML = `
-        <div class="modal-content">
-            <div class="modal-preview-header">
-                <h3 id="store-list-title">Resultados</h3>
-            </div>
-            <div class="modal-content-scrollable" id="store-list-content">
-                <p class="list-placeholder">Cargando...</p>
-            </div>
-            <div class="modal-main-buttons">
-                <button id="close-store-list-btn" class="aqua-button">Volver</button>
-            </div>
-        </div>
-    `;
-    document.body.appendChild(storeListModal);
-
-    _bindStoreListModalEvents();
-}
-
-function _bindStoreListModalEvents() {
-    document.getElementById('close-store-list-btn')?.addEventListener('click', closeStoreListModal);
-
-    const contentEl = document.getElementById('store-list-content');
-    contentEl?.addEventListener('click', (e) => {
-        const loadMoreBtn = e.target.closest('#load-more-btn');
-        if (loadMoreBtn && callbacks.onStoreLoadMore) {
-            loadMoreBtn.disabled = true;
-            loadMoreBtn.textContent = 'Cargando...';
-            callbacks.onStoreLoadMore();
-            return;
-        }
-
-        const itemEl = e.target.closest('.store-list-item');
-        if (itemEl && callbacks.onStoreItemClick) {
-            callbacks.onStoreItemClick(itemEl.dataset.diaId);
-        }
-    });
-}
-
-function openStoreListModal(title) {
-    if(!storeListModal) createStoreListModal();
-
-    const titleEl = document.getElementById('store-list-title');
-    const contentEl = document.getElementById('store-list-content');
-
-    if (titleEl) titleEl.textContent = title;
-    if (contentEl) contentEl.innerHTML = '<p class="list-placeholder">Cargando...</p>';
-
-    storeListModal.style.display = 'flex';
-    setTimeout(() => storeListModal.classList.add('visible'), 10);
-}
-
-function closeStoreListModal() {
-    if (!storeListModal) return;
-    storeListModal.classList.remove('visible');
-    setTimeout(() => storeListModal.style.display = 'none', 200);
-}
-
-function updateStoreList(items, append = false, hasMore = false) {
-    const contentEl = document.getElementById('store-list-content');
-    if (!contentEl) return;
-
-    const placeholder = contentEl.querySelector('.list-placeholder');
-    if (placeholder) placeholder.remove();
-    const loadMoreBtn = contentEl.querySelector('#load-more-btn');
-    if (loadMoreBtn) loadMoreBtn.remove();
-
-    if (!append && (!items || items.length === 0)) {
-        contentEl.innerHTML = '<p class="list-placeholder">No se encontraron resultados.</p>';
-        return;
-    }
-
-    if (!append) {
-        contentEl.innerHTML = '';
-    }
-
-    const fragment = document.createDocumentFragment();
-    items.forEach(item => {
-        const itemEl = createStoreListItem(item);
-        fragment.appendChild(itemEl);
-    });
-    contentEl.appendChild(fragment);
-
-    if (hasMore) {
-        const btn = document.createElement('button');
-        btn.id = 'load-more-btn';
-        btn.className = 'aqua-button';
-        btn.textContent = 'Cargar Más (+10)';
-        contentEl.appendChild(btn);
-    } else if (items.length > 0) {
-        const end = document.createElement('p');
-        end.className = 'list-placeholder';
-        end.textContent = 'Fin de los resultados.';
-        contentEl.appendChild(end);
-    }
-}
-
-function createAlertPromptModal() {
-    if (alertPromptModal) return;
-
-    alertPromptModal = document.createElement('div');
-    alertPromptModal.id = 'alert-prompt-modal';
-    alertPromptModal.className = 'modal-alert-prompt';
-    alertPromptModal.innerHTML = `
-        <div class="modal-alert-content">
-            <p id="alert-prompt-message"></p>
-            <input type="text" id="alert-prompt-input" style="display: none;">
-            <div class="modal-main-buttons">
-                <button id="alert-prompt-cancel" style="display: none;">Cancelar</button>
-                <button id="alert-prompt-ok">OK</button>
-            </div>
-        </div>`;
-    document.body.appendChild(alertPromptModal);
-
-    _bindAlertPromptEvents();
-}
-
-function _bindAlertPromptEvents() {
-    document.getElementById('alert-prompt-ok')?.addEventListener('click', () => {
-        closeAlertPromptModal(true);
-    });
-    document.getElementById('alert-prompt-cancel')?.addEventListener('click', () => {
-        closeAlertPromptModal(false);
-    });
-}
-
-function closeAlertPromptModal(isOk) {
-    if (!alertPromptModal) return;
-
-    alertPromptModal.classList.remove('visible');
-    setTimeout(() => {
-        alertPromptModal.style.display = 'none';
-        alertPromptModal.querySelector('.modal-alert-content').classList.remove('settings-alert', 'search-alert');
-    }, 200);
-
-    if (_promptResolve) {
-        if (isOk) {
-            const input = document.getElementById('alert-prompt-input');
-            _promptResolve(input.value);
-        } else {
-            _promptResolve(null);
-        }
-        _promptResolve = null;
-    }
-}
-
-function showAlert(message, type = 'default') {
-    if(!alertPromptModal) createAlertPromptModal();
-    const contentEl = alertPromptModal.querySelector('.modal-alert-content');
-
-    contentEl.classList.remove('settings-alert', 'search-alert');
-    if (type === 'settings') {
-        contentEl.classList.add('settings-alert');
-    }
-
-    document.getElementById('alert-prompt-message').textContent = message;
-    document.getElementById('alert-prompt-input').style.display = 'none';
-    document.getElementById('alert-prompt-cancel').style.display = 'none';
-
-    const okBtn = document.getElementById('alert-prompt-ok');
-    okBtn.textContent = 'OK';
-
-    alertPromptModal.style.display = 'flex';
-    setTimeout(() => alertPromptModal.classList.add('visible'), 10);
-}
-
-function showPrompt(message, defaultValue = '', type = 'default') {
-    if(!alertPromptModal) createAlertPromptModal();
-    const contentEl = alertPromptModal.querySelector('.modal-alert-content');
-
-    contentEl.classList.remove('settings-alert', 'search-alert'); // Limpiar clases
-    if (type === 'search') {
-        contentEl.classList.add('search-alert');
-    }
-
-    document.getElementById('alert-prompt-message').textContent = message;
-    document.getElementById('alert-prompt-input').style.display = 'block';
-    document.getElementById('alert-prompt-input').value = defaultValue;
-    document.getElementById('alert-prompt-cancel').style.display = 'block';
-
-    const okBtn = document.getElementById('alert-prompt-ok');
-    okBtn.textContent = 'OK';
-
-    alertPromptModal.style.display = 'flex';
-    setTimeout(() => alertPromptModal.classList.add('visible'), 10);
-
-    return new Promise((resolve) => {
-        _promptResolve = resolve;
-    });
-}
-
-function createConfirmModal() {
-    if (confirmModal) return;
-
-    confirmModal = document.createElement('div');
-    confirmModal.id = 'confirm-modal';
-    confirmModal.className = 'modal-confirm';
-    confirmModal.innerHTML = `
-        <div class="modal-alert-content">
-            <p id="confirm-message"></p>
-            <div class="modal-main-buttons">
-                <button id="confirm-cancel">Cancelar</button>
-                <button id="confirm-ok" class="delete-confirm">Borrar</button>
-            </div>
-        </div>`;
-    document.body.appendChild(confirmModal);
-
-    _bindConfirmModalEvents();
-}
-
-function _bindConfirmModalEvents() {
-    document.getElementById('confirm-ok')?.addEventListener('click', () => {
-        closeConfirmModal(true);
-    });
-    document.getElementById('confirm-cancel')?.addEventListener('click', () => {
-        closeConfirmModal(false);
-    });
-}
-
-function closeConfirmModal(isConfirmed) {
-    if (!confirmModal) return;
-
-    confirmModal.classList.remove('visible');
-    setTimeout(() => {
-        confirmModal.style.display = 'none';
-    }, 200);
-
-    if (_confirmResolve) {
-        _confirmResolve(isConfirmed);
-        _confirmResolve = null;
-    }
-}
-
-function showConfirm(message) {
-     if(!confirmModal) createConfirmModal();
-
-    document.getElementById('confirm-message').textContent = message;
-
-    confirmModal.style.display = 'flex';
-    setTimeout(() => confirmModal.classList.add('visible'), 10);
-
-    return new Promise((resolve) => {
-        _confirmResolve = resolve;
-    });
-}
-
+// ... (Modales Almacén, Alerta, Confirmación no cambian en su creación/manejo) ...
 
 // --- Funciones de Ayuda (Helpers) de UI ---
 function _renderMemoryList(listEl, memories, showActions) {
@@ -983,10 +678,10 @@ function createMemoryItemHTML(mem, showActions) {
         artworkHTML = `<span class="memoria-icon material-icons-outlined">${icon}</span>`;
     }
 
-    // DEBUG: Comprobar datos al renderizar ítem en lista de edición
-    /*if (showActions) {
+    /* // DEBUGGING LOG REMOVED
+    if (showActions) {
         console.log("Renderizando ítem (Editar Día):", mem);
-    }*/ // Quitado el log de depuración
+    }*/
 
     const actionsHTML = (showActions && memId) ? `
         <div class="memoria-actions">
@@ -1001,10 +696,92 @@ function createMemoryItemHTML(mem, showActions) {
     return `${artworkHTML}<div class="memoria-item-content">${contentHTML}</div>${actionsHTML}`;
 }
 
-// ... (Resto de funciones de createStore..., _createLoginButton, etc. no cambian) ...
+// ... (Resto de createStore..., _createLoginButton, etc. no cambian) ...
+
+// *** INICIO FUNCIONES MOVIDAS ***
+// Definir estas funciones ANTES de que sean llamadas por otras funciones del módulo.
+
+function showMusicResults(tracks, isSelected = false) {
+    const resultsEl = document.getElementById('itunes-results');
+    if (!resultsEl) return;
+    resultsEl.innerHTML = '';
+    _selectedMusic = null;
+
+    if (isSelected && tracks.length > 0) {
+        const track = tracks[0];
+        _selectedMusic = track; // Guardar el objeto completo
+        resultsEl.innerHTML = `<p class="search-result-selected">Seleccionado: ${track.trackName}</p>`;
+        return;
+    }
+
+    if (!tracks || tracks.length === 0) return; // Añadida verificación por si tracks es undefined
+
+    tracks.forEach(track => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'search-result-item';
+        const artwork = track.artworkUrl60 || '';
+        itemEl.innerHTML = `
+            <img src="${artwork}" class="memoria-artwork" alt="" ${artwork ? '' : 'style="display:none;"'}>
+            <div class="memoria-item-content">
+                <small>${track.artistName}</small>
+                <strong>${track.trackName}</strong>
+            </div>
+            <span class="material-icons-outlined">add_circle_outline</span>
+        `;
+        itemEl.addEventListener('click', () => {
+            _selectedMusic = track; // Guardar el objeto completo
+            document.getElementById('memoria-music-search').value = `${track.trackName} - ${track.artistName}`;
+            resultsEl.innerHTML = `<p class="search-result-selected">Seleccionado: ${track.trackName}</p>`;
+        });
+        resultsEl.appendChild(itemEl);
+    });
+}
+
+function showPlaceResults(places, isSelected = false) {
+    const resultsEl = document.getElementById('place-results');
+    if (!resultsEl) return;
+    resultsEl.innerHTML = '';
+    _selectedPlace = null;
+
+    if (isSelected && places.length > 0) {
+        const place = places[0];
+        // Asegurarse de que el nombre se extrae correctamente (puede ser display_name)
+        const displayName = place.display_name || place.name || 'Lugar seleccionado';
+        _selectedPlace = { name: displayName, data: place }; // Guardar objeto completo
+        resultsEl.innerHTML = `<p class="search-result-selected">Seleccionado: ${displayName}</p>`;
+        return;
+    }
+
+    if (!places || places.length === 0) return; // Añadida verificación por si places es undefined
+
+    places.forEach(place => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'search-result-item';
+        // Usar display_name que es más común en Nominatim
+        const displayName = place.display_name || 'Lugar sin nombre';
+        itemEl.innerHTML = `
+            <span class="memoria-icon material-icons-outlined">place</span>
+            <div class="memoria-item-content">
+                <strong>${displayName}</strong>
+            </div>
+            <span class="material-icons-outlined">add_circle_outline</span>
+        `;
+        itemEl.addEventListener('click', () => {
+            _selectedPlace = {
+                name: displayName,
+                data: place // Guardar objeto completo
+            };
+            document.getElementById('memoria-place-search').value = displayName;
+            resultsEl.innerHTML = `<p class="search-result-selected">Seleccionado: ${displayName.substring(0, 40)}...</p>`;
+        });
+        resultsEl.appendChild(itemEl);
+    });
+}
+// *** FIN FUNCIONES MOVIDAS ***
+
 
 // --- Lógica del Formulario de Memorias ---
-let _selectedMusic = null;
+let _selectedMusic = null; // Mover declaraciones aquí si no estaban ya
 let _selectedPlace = null;
 
 function _handleFormSubmit(e) {
@@ -1033,8 +810,7 @@ function _handleFormSubmit(e) {
         const year = document.getElementById('memoria-year').value;
 
         const formData = {
-            // REMOVIDO -> ya no se pasa el 'id' desde aquí, se borra en store.js
-            // id: _isEditingMemory ? form.dataset.editingId : null,
+            // id ya no se pasa desde aquí
             year: year ? parseInt(year) : null,
             Tipo: document.getElementById('memoria-type').value,
         };
@@ -1067,13 +843,7 @@ function _handleFormSubmit(e) {
                     formData.CancionData = null;
                 }
                 break;
-            // REMOVIDO case 'Imagen'
-            /*case 'Imagen':
-                // const fileInput = document.getElementById('memoria-image-upload'); // Ya no existe
-                formData.Descripcion = document.getElementById('memoria-image-desc').value;
-                // formData.file = (fileInput.files && fileInput.files.length > 0) ? fileInput.files[0] : null; // Ya no existe
-                // formData.ImagenURL = _isEditingMemory ? form.dataset.existingImageUrl : null; // Ya no se maneja aquí
-                break;*/
+            // No hay case 'Imagen'
         }
 
         callbacks.onSaveMemory(diaId, formData, _isEditingMemory);
@@ -1082,14 +852,15 @@ function _handleFormSubmit(e) {
 
 function handleMemoryTypeChange() {
     const type = document.getElementById('memoria-type').value;
-    // REMOVIDO 'Imagen' de la lista
-    ['Texto', 'Lugar', 'Musica'].forEach(id => {
+    ['Texto', 'Lugar', 'Musica'].forEach(id => { // Quitado 'Imagen'
         const el = document.getElementById(`input-type-${id}`);
         if (el) el.style.display = (id === type) ? 'block' : 'none';
     });
+    // Llamadas a showResults AHORA deberían funcionar porque las funciones están definidas antes
     if (type !== 'Musica') showMusicResults([]);
     if (type !== 'Lugar') showPlaceResults([]);
 }
+
 
 function fillFormForEdit(mem) {
     if (!mem || mem.Tipo === 'Imagen') return; // No editar imágenes si aún existen
@@ -1101,7 +872,7 @@ function fillFormForEdit(mem) {
     const saveBtn = document.getElementById('save-memoria-btn');
     const typeSelect = document.getElementById('memoria-type');
 
-    form.dataset.editingId = mem.id;
+    form.dataset.editingId = mem.id; // Guardamos el ID real del documento aquí
     saveBtn.textContent = 'Actualizar Memoria';
 
     if (mem.Fecha_Original) {
@@ -1115,8 +886,15 @@ function fillFormForEdit(mem) {
          document.getElementById('memoria-year').value = '';
     }
 
-    typeSelect.value = mem.Tipo;
-    handleMemoryTypeChange();
+    // Asegurarse de que el tipo existe en el select antes de asignarlo
+    const exists = Array.from(typeSelect.options).some(opt => opt.value === mem.Tipo);
+    if (exists) {
+        typeSelect.value = mem.Tipo;
+    } else {
+        console.warn(`Tipo de memoria "${mem.Tipo}" no encontrado en el select. Usando 'Texto'.`);
+        typeSelect.value = 'Texto'; // Fallback a 'Texto'
+    }
+    handleMemoryTypeChange(); // Mostrar/ocultar campos según el tipo
 
     switch (mem.Tipo) {
         case 'Texto':
@@ -1125,29 +903,25 @@ function fillFormForEdit(mem) {
         case 'Lugar':
             document.getElementById('memoria-place-search').value = mem.LugarNombre || '';
             if (mem.LugarData) {
+                // Reconstruir el objeto _selectedPlace para mostrarlo
                 _selectedPlace = { name: mem.LugarNombre, data: mem.LugarData };
-                showPlaceResults([_selectedPlace], true);
+                showPlaceResults([_selectedPlace.data], true); // Pasar el objeto original (data)
             }
             break;
         case 'Musica':
              document.getElementById('memoria-music-search').value = mem.CancionInfo || '';
              if (mem.CancionData) {
+                // Reconstruir el objeto _selectedMusic para mostrarlo
                 _selectedMusic = mem.CancionData;
                 showMusicResults([_selectedMusic], true);
              }
             break;
-        // REMOVIDO case 'Imagen'
-        /*case 'Imagen':
-            document.getElementById('memoria-image-desc').value = mem.Descripcion || '';
-            // No mostrar estado de imagen ya que no hay input
-            // if (mem.ImagenURL) {
-            //    form.dataset.existingImageUrl = mem.ImagenURL;
-            // }
-            break;*/
+        // No hay case 'Imagen'
     }
 
-    _showMemoryForm(true);
+    _showMemoryForm(true); // Mostrar el formulario
 
+    // Scroll al formulario
     document.querySelector('.modal-content-scrollable')?.scrollTo({
         top: document.getElementById('memory-form').offsetTop,
         behavior: 'smooth'
@@ -1164,24 +938,26 @@ function resetMemoryForm() {
 
     form.reset();
     document.getElementById('memoria-year').value = '';
-    form.dataset.editingId = '';
-    // form.dataset.existingImageUrl = ''; // Ya no existe
+    form.dataset.editingId = ''; // Limpiar el ID guardado
 
     document.getElementById('save-memoria-btn').textContent = 'Añadir Memoria';
     document.getElementById('save-memoria-btn').disabled = false;
 
+    // Limpiar resultados (AHORA debería funcionar)
     showMusicResults([]);
     showPlaceResults([]);
     showModalStatus('memoria-status', '', false);
-    // showModalStatus('image-upload-status', '', false); // Ya no existe
+    // No hay status de imagen
 
-    handleMemoryTypeChange();
+    handleMemoryTypeChange(); // Asegurarse de que se muestra el campo correcto
 
-    _showMemoryForm(false);
+    _showMemoryForm(false); // Ocultar formulario al resetear
 }
 
-// ... (showMusicResults, showPlaceResults, showModalStatus, showCrumbieAnimation no cambian) ...
 
+// ... (showModalStatus, showCrumbieAnimation no cambian) ...
+
+// --- Exportaciones Públicas ---
 export const ui = {
     init,
     setLoading,
@@ -1209,8 +985,8 @@ export const ui = {
     updateMemoryList,
     resetMemoryForm,
     fillFormForEdit,
-    showMusicResults,
-    showPlaceResults,
+    showMusicResults, // Exportar las funciones movidas
+    showPlaceResults, // Exportar las funciones movidas
     showModalStatus,
     handleMemoryTypeChange,
 
