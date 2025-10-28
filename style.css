@@ -1,4 +1,4 @@
-/* style.css - v17.4 - Ajuste Calendario, Search Modal y Crumbie */
+/* style.css - v17.5 - Re-añadido bloque de acciones de edición */
 @charset "UTF-8";
 
 /* --- Base y Fondo --- */
@@ -803,7 +803,8 @@ main {
     border: 1px solid #888;
 }
 
-/* --- INICIO FIX v17.0: Estilos para .memoria-item en Modal Edición --- */
+/* --- ESTILOS para .memoria-item en Modal Edición --- */
+/* (Combinados v17.0 y v17.5) */
 #edit-memorias-list .memoria-item {
     display: flex;
     align-items: center;
@@ -856,7 +857,8 @@ main {
     color: #555;
     font-size: 0.9em;
 }
-/* ESTE ERA EL BLOQUE QUE FALTABA */
+
+/* --- INICIO BLOQUE FALTANTE (v17.5) --- */
 #edit-memorias-list .memoria-actions {
     display: flex;
     flex-shrink: 0;
@@ -878,6 +880,8 @@ main {
     color: #d15047; /* Rojo */
     font-size: 22px;
 }
+/* --- FIN BLOQUE FALTANTE (v17.5) --- */
+
 #edit-memorias-list .list-placeholder {
     padding: 20px;
     text-align: center;
@@ -892,7 +896,6 @@ main {
     width: 100%;
     box-sizing: border-box;
 }
-/* --- FIN FIX v17.0 --- */
 
 /* --- INICIO v17.2: Estilos para Modal Almacén --- */
 .store-category-list {
