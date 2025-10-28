@@ -1,5 +1,5 @@
 /*
- * main.js (v4.15 - Modal Redesign)
+ * main.js (v4.15.1 - Debugging image upload)
  * Controlador principal de Ephemerides.
  */
 
@@ -39,7 +39,7 @@ let state = {
 // --- 1. Inicialización de la App ---
 
 async function checkAndRunApp() {
-    console.log("Iniciando Ephemerides v4.15 (Modal Redesign)...");
+    console.log("Iniciando Ephemerides v4.15.1 (Debugging image upload)...");
 
     try {
         ui.setLoading("Iniciando...", true);
@@ -376,21 +376,39 @@ async function handleSaveMemorySubmit(diaId, memoryData, isEditing) {
         memoryData.Fecha_Original = fullDate;
         delete memoryData.year;
 
+        // --- INICIO DEBUG IMAGE UPLOAD ---
         if (memoryData.Tipo === 'Imagen' && memoryData.file) {
             if (!state.currentUser.uid) {
+                console.error("[handleSaveMemorySubmit] Error: Usuario no logueado para subir imagen.");
                 throw new Error("Debes estar logueado para subir imágenes.");
             }
+            console.log("[handleSaveMemorySubmit] Preparando para subir imagen..."); // <-- Log A
             ui.showModalStatus('image-upload-status', 'Subiendo imagen...', false);
-            memoryData.ImagenURL = await uploadImage(memoryData.file, state.currentUser.uid, diaId);
-            ui.showModalStatus('image-upload-status', 'Imagen subida.', false);
-
+            try {
+                memoryData.ImagenURL = await uploadImage(memoryData.file, state.currentUser.uid, diaId);
+                console.log("[handleSaveMemorySubmit] uploadImage devolvió URL:", memoryData.ImagenURL); // <-- Log B
+                ui.showModalStatus('image-upload-status', 'Imagen subida.', false);
+            } catch (uploadError) {
+                 // Capturar error si uploadImage falla
+                 console.error("[handleSaveMemorySubmit] Error devuelto por uploadImage:", uploadError);
+                 ui.showModalStatus('image-upload-status', `Error subiendo: ${uploadError.message}`, true);
+                 // Importante: Detener la ejecución para no intentar guardar en Firestore
+                 saveBtn.disabled = false;
+                 saveBtn.textContent = isEditing ? 'Actualizar Memoria' : 'Añadir Memoria';
+                 return; // Salir de la función aquí
+            }
         }
+        // --- FIN DEBUG IMAGE UPLOAD ---
 
-        const memoryId = isEditing ? memoryData.id : null;
-        await saveMemory(diaId, memoryData, memoryId);
+
+        console.log("[handleSaveMemorySubmit] Preparando para llamar a saveMemory..."); // <-- Log C
+        const memoryId = isEditing ? memoryData.id : null; // Aquí memoryData.id ya debería ser null o el ID correcto si se edita
+        await saveMemory(diaId, memoryData, memoryId); // saveMemory ahora borra el id interno si lo hay
+        console.log("[handleSaveMemorySubmit] saveMemory completado."); // <-- Log D
+
 
         ui.showModalStatus('memoria-status', isEditing ? 'Memoria actualizada' : 'Memoria guardada', false);
-        
+
         // CAMBIO v17.0: resetMemoryForm ahora también oculta el formulario
         ui.resetMemoryForm();
 
@@ -412,6 +430,7 @@ async function handleSaveMemorySubmit(diaId, memoryData, isEditing) {
         }
     }
 }
+
 
 async function handleDeleteMemory(diaId, mem) {
     if (!state.currentUser) {
@@ -594,9 +613,9 @@ function handleCrumbieClick() {
         "Buscando un día especial..."
     ];
     const msg = messages[Math.floor(Math.random() * messages.length)];
-    
+
     ui.showCrumbieAnimation(msg);
-    
+
     console.log("Crumbie clickeado. Listo para IA.");
 }
 
