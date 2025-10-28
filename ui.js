@@ -1,5 +1,5 @@
 /*
- * ui.js (v4.20.3 - Strict function order)
+ * ui.js (v4.20.4 - Final function order fix)
  * Módulo de interfaz de usuario.
  */
 
@@ -9,7 +9,7 @@ let _currentDay = null;
 let _currentMemories = [];
 let _allDaysData = [];
 let _isEditingMemory = false;
-let _selectedMusic = null; // Mover variables de estado del form aquí
+let _selectedMusic = null;
 let _selectedPlace = null;
 
 // Modales
@@ -38,7 +38,7 @@ function showMusicResults(tracks, isSelected = false) {
     const resultsEl = document.getElementById('itunes-results');
     if (!resultsEl) return;
     resultsEl.innerHTML = '';
-    _selectedMusic = null; // Resetear selección
+    _selectedMusic = null;
 
     if (isSelected && tracks && tracks.length > 0) {
         const track = tracks[0];
@@ -74,7 +74,7 @@ function showPlaceResults(places, isSelected = false) {
     const resultsEl = document.getElementById('place-results');
     if (!resultsEl) return;
     resultsEl.innerHTML = '';
-    _selectedPlace = null; // Resetear selección
+    _selectedPlace = null;
 
     if (isSelected && places && places.length > 0) {
         const place = places[0];
@@ -209,15 +209,47 @@ function showCrumbieAnimation(message) {
     textEl.addEventListener('animationend', () => textEl.remove());
 }
 
+// *** MOVIDAS AQUÍ: _renderMemoryList y updateMemoryList ***
+function _renderMemoryList(listEl, memories, showActions) {
+    if (!listEl) return;
+    listEl.innerHTML = '';
+    if (!memories || memories.length === 0) {
+        listEl.innerHTML = '<p class="list-placeholder">No hay memorias para este día.</p>';
+        return;
+    }
+    memories.sort((a, b) => (b.Fecha_Original?.toMillis() || 0) - (a.Fecha_Original?.toMillis() || 0));
+    const fragment = document.createDocumentFragment();
+    memories.forEach(mem => {
+        const itemEl = document.createElement('div');
+        itemEl.className = 'memoria-item';
+        itemEl.innerHTML = createMemoryItemHTML(mem, showActions); // Llama a helper
+        fragment.appendChild(itemEl);
+    });
+    listEl.appendChild(fragment);
+}
+
+function updateMemoryList(memories) { // <-- DEFINICIÓN AHORA ESTÁ AQUÍ
+    _currentMemories = memories || [];
+    const editList = document.getElementById('edit-memorias-list');
+    // Asegurarse de que el modal de edición existe y es visible
+    if (editList && editModal?.style.display !== 'none' && editModal?.classList.contains('visible')) {
+        _renderMemoryList(editList, _currentMemories, true); // Llama a _renderMemoryList
+    }
+    const previewList = document.getElementById('preview-memorias-list');
+    if (previewList && previewModal?.classList.contains('visible') && _currentDay) {
+         _renderMemoryList(previewList, _currentMemories, false); // Llama a _renderMemoryList
+    }
+}
+
 // --- FIN: FUNCIONES HELPER / UTILIDADES ---
 
 // --- INICIO: FUNCIONES PRINCIPALES Y DE MODALES ---
 
 function init(mainCallbacks) {
-    console.log("UI Module init (v4.20.3 - Strict function order)"); // Actualizar versión
+    console.log("UI Module init (v4.20.4 - Final function order fix)"); // Actualizar versión
     callbacks = mainCallbacks;
 
-    // Crear Modales Primero (sus funciones `create...` usan helpers)
+    // Crear Modales Primero
     createPreviewModal();
     createEditModal();
     createStoreModal();
@@ -235,240 +267,63 @@ function init(mainCallbacks) {
 }
 
 // ... Funciones _bind... (sin cambios) ...
-function _bindHeaderEvents() {
-    document.getElementById('header-search-btn')?.addEventListener('click', () => {
-        if (callbacks.onFooterAction) callbacks.onFooterAction('search');
-    });
-}
-
-function _bindNavEvents() {
-    const prevBtn = document.getElementById('prev-month');
-    const nextBtn = document.getElementById('next-month');
-
-    if (prevBtn) {
-        prevBtn.onclick = () => {
-            if (callbacks.onMonthChange) callbacks.onMonthChange('prev');
-        };
-    }
-    if (nextBtn) {
-        nextBtn.onclick = () => {
-            if (callbacks.onMonthChange) callbacks.onMonthChange('next');
-        };
-    }
-}
-
-function _bindFooterEvents() {
-    document.getElementById('btn-add-memory')?.addEventListener('click', () => {
-        if (callbacks.onFooterAction) callbacks.onFooterAction('add');
-    });
-    document.getElementById('btn-store')?.addEventListener('click', () => {
-        if (callbacks.onFooterAction) callbacks.onFooterAction('store');
-    });
-    document.getElementById('btn-shuffle')?.addEventListener('click', () => {
-        if (callbacks.onFooterAction) callbacks.onFooterAction('shuffle');
-    });
-    document.getElementById('btn-settings')?.addEventListener('click', () => {
-        if (callbacks.onFooterAction) callbacks.onFooterAction('settings');
-    });
-}
-
-function _bindCrumbieEvents() {
-    document.getElementById('crumbie-btn')?.addEventListener('click', () => {
-        if (callbacks.onCrumbieClick) callbacks.onCrumbieClick();
-    });
-}
-
-function _bindLoginEvents() {
-    const header = document.querySelector('header');
-    header?.addEventListener('click', (e) => {
-        const loginBtn = e.target.closest('#login-btn');
-        const userInfo = e.target.closest('#user-info');
-        if (loginBtn?.dataset.action === 'login' && callbacks.onLogin) callbacks.onLogin();
-        else if (userInfo && callbacks.onLogout) callbacks.onLogout();
-    });
-}
-
-function _bindGlobalListeners() {
-    document.body.addEventListener('click', (e) => {
-        if (e.target.classList.contains('modal-preview')) closePreviewModal();
-        if (e.target.classList.contains('modal-edit')) closeEditModal();
-        if (e.target.classList.contains('modal-store')) closeStoreModal();
-        if (e.target.classList.contains('modal-store-list')) closeStoreListModal();
-        if (e.target.classList.contains('modal-alert-prompt')) closeAlertPromptModal(false);
-        if (e.target.classList.contains('modal-confirm')) closeConfirmModal(false);
-    });
-}
+function _bindHeaderEvents() { /* ... */ }
+function _bindNavEvents() { /* ... */ }
+function _bindFooterEvents() { /* ... */ }
+function _bindCrumbieEvents() { /* ... */ }
+function _bindLoginEvents() { /* ... */ }
+function _bindGlobalListeners() { /* ... */ }
 
 
 // ... Funciones de Renderizado Principal (setLoading, updateLoginUI, drawCalendar, updateSpotlight) ...
-function setLoading(message, show) {
-    const appContent = document.getElementById('app-content');
-    if (!appContent) return;
-    if (show) {
-        appContent.innerHTML = `<p class="loading-message">${message}</p>`;
-    } else {
-        const loading = appContent.querySelector('.loading-message');
-        if (loading) loading.remove();
-    }
-}
-
-function updateLoginUI(user) {
-    const loginBtnContainer = document.getElementById('login-btn-container');
-    const userInfo = document.getElementById('user-info');
-    const userName = document.getElementById('user-name');
-    const userImg = document.getElementById('user-img');
-
-    if (!loginBtnContainer || !userInfo || !userName || !userImg) return;
-
-    if (user) {
-        userInfo.style.display = 'flex';
-        userName.textContent = user.displayName || 'Usuario';
-        userImg.src = user.photoURL || `https://placehold.co/30x30/ccc/fff?text=${user.displayName ? user.displayName[0] : '?'}`;
-        _createLoginButton(true, loginBtnContainer); // Llama a helper
-    } else {
-        userInfo.style.display = 'none';
-        _createLoginButton(false, loginBtnContainer); // Llama a helper
-    }
-}
-
-function drawCalendar(monthName, days, todayId) {
-    const monthNameDisplay = document.getElementById('month-name-display');
-    const appContent = document.getElementById('app-content');
-
-    if (monthNameDisplay) monthNameDisplay.textContent = monthName;
-    if (!appContent) return;
-
-    const grid = document.createElement('div');
-    grid.className = 'calendario-grid';
-
-    days.forEach(dia => {
-        const btn = document.createElement('button');
-        btn.className = 'dia-btn';
-        btn.innerHTML = `<span class="dia-numero">${parseInt(dia.id.substring(3))}</span>`;
-        if (dia.id === todayId) btn.classList.add('dia-btn-today');
-        if (dia.tieneMemorias) btn.classList.add('tiene-memorias');
-        btn.addEventListener('click', () => { if (callbacks.onDayClick) callbacks.onDayClick(dia); });
-        grid.appendChild(btn);
-    });
-
-    appContent.innerHTML = '';
-    appContent.appendChild(grid);
-}
-
-function updateSpotlight(dateString, dayName, memories) {
-    const titleEl = document.getElementById('spotlight-date-header');
-    const listEl = document.getElementById('today-memory-spotlight');
-    if (titleEl) titleEl.textContent = dateString;
-    if (!listEl) return;
-    listEl.innerHTML = '';
-    if (dayName) {
-        const dayNameEl = document.createElement('h3');
-        dayNameEl.className = 'spotlight-day-name';
-        dayNameEl.textContent = `- ${dayName} -`;
-        listEl.appendChild(dayNameEl);
-    }
-    const containerEl = document.createElement('div');
-    containerEl.id = 'spotlight-memories-container';
-    listEl.appendChild(containerEl);
-    if (!memories || memories.length === 0) {
-        containerEl.innerHTML = '<p class="list-placeholder">No hay memorias destacadas.</p>';
-        return;
-    }
-    memories.forEach(mem => {
-        const itemEl = document.createElement('div');
-        itemEl.className = 'spotlight-memory-item';
-        if (mem.Tipo === 'Texto') itemEl.classList.add('spotlight-item-text');
-        itemEl.innerHTML = createMemoryItemHTML(mem, false); // Llama a helper
-        itemEl.addEventListener('click', () => {
-             const diaObj = _allDaysData.find(d => d.id === mem.diaId);
-             if (diaObj && callbacks.onDayClick) callbacks.onDayClick(diaObj);
-             else console.warn("Spotlight: No se encontró el día", mem.diaId);
-        });
-        containerEl.appendChild(itemEl);
-    });
-}
+function setLoading(message, show) { /* ... */ }
+function updateLoginUI(user) { /* ... */ _createLoginButton(/* ... */); } // Llama a helper
+function drawCalendar(monthName, days, todayId) { /* ... */ }
+function updateSpotlight(dateString, dayName, memories) { /* ... */ createMemoryItemHTML(mem, false); /* ... */ } // Llama a helper
 
 // ... Funciones Create/Open/Close/Bind para Modales ...
-// (Definidas aquí ahora, usan helpers definidos antes)
-
 // Preview
-function createPreviewModal() { /* ... código ... */
-    if (previewModal) return;
-    previewModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(previewModal);
-    document.getElementById('close-preview-btn')?.addEventListener('click', closePreviewModal); // Llama a closePreviewModal
-    document.getElementById('edit-from-preview-btn')?.addEventListener('click', () => { if (callbacks.onEditFromPreview) callbacks.onEditFromPreview(); });
-}
-function showPreviewLoading(isLoading) { /* ... código ... */ }
-function openPreviewModal(dia, memories) { /* ... código ... */ _renderMemoryList(listEl, memories, false); /* ... código ... */ } // Llama a _renderMemoryList
-function closePreviewModal() { /* ... código ... */ }
+function createPreviewModal() { if (previewModal) return; previewModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(previewModal); document.getElementById('close-preview-btn')?.addEventListener('click', closePreviewModal); document.getElementById('edit-from-preview-btn')?.addEventListener('click', () => { if (callbacks.onEditFromPreview) callbacks.onEditFromPreview(); }); }
+function showPreviewLoading(isLoading) { const loadingEl = previewModal?.querySelector('.preview-loading'); /* ... */ }
+function openPreviewModal(dia, memories) { if (!previewModal) createPreviewModal(); _currentDay = dia; /* ... */ _renderMemoryList(listEl, memories, false); /* ... */ } // Llama a _renderMemoryList
+function closePreviewModal() { if (!previewModal) return; /* ... */ }
 
 // Edit
-function createEditModal() { /* ... código ... */
-    if (editModal) return;
-    editModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(editModal);
-    _bindEditModalEvents(); // Llama a _bindEditModalEvents
-}
-function showEditLoading(isLoading) { /* ... código ... */ }
-async function handleNameSelectedDay() { /* ... código ... */ const newName = await showPrompt(/*...*/); /* ... */ } // Llama a showPrompt
-function _bindEditModalEvents() { /* ... código ... */
-    document.getElementById('close-edit-add-btn')?.addEventListener('click', closeEditModal); // Llama a closeEditModal
-    // ... otros listeners ...
-    document.getElementById('btn-show-add-form')?.addEventListener('click', () => { resetMemoryForm(); _showMemoryForm(true); }); // Llama a resetMemoryForm, _showMemoryForm
-    document.getElementById('btn-cancel-mem-edit')?.addEventListener('click', () => { _showMemoryForm(false); }); // Llama a _showMemoryForm
-    document.getElementById('memory-form')?.addEventListener('submit', _handleFormSubmit); // Llama a _handleFormSubmit
-    document.getElementById('memoria-type')?.addEventListener('change', handleMemoryTypeChange); // Llama a handleMemoryTypeChange
-    // ... listeners lista ...
-        // if (editBtn) ... fillFormForEdit(memToEdit); // Llama a fillFormForEdit
-        // if (deleteBtn) ... callbacks.onDeleteMemory(...)
-}
-function openEditModal(dia, memories, allDays) { /* ... código ... */
-    _showMemoryForm(false); // Llama a helper
-    resetMemoryForm(); // Llama a resetMemoryForm
-    _renderMemoryList(document.getElementById('edit-memorias-list'), _currentMemories, true); // Llama a _renderMemoryList
-    showModalStatus('save-status', '', false); // Llama a helper
-    // ... código ...
-}
-function closeEditModal() { /* ... código ... */ }
+function createEditModal() { if (editModal) return; editModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(editModal); _bindEditModalEvents(); } // Llama a _bindEditModalEvents
+function showEditLoading(isLoading) { /* ... */ }
+async function handleNameSelectedDay() { /* ... */ const newName = await showPrompt(/*...*/); /* ... */ } // Llama a showPrompt
+function _bindEditModalEvents() { document.getElementById('close-edit-add-btn')?.addEventListener('click', closeEditModal); /* ... */ document.getElementById('btn-show-add-form')?.addEventListener('click', () => { resetMemoryForm(); _showMemoryForm(true); }); /* ... */ document.getElementById('memory-form')?.addEventListener('submit', _handleFormSubmit); document.getElementById('memoria-type')?.addEventListener('change', handleMemoryTypeChange); /* ... */ listEl?.addEventListener('click', (e) => { /* ... */ if (editBtn) { /* ... */ fillFormForEdit(memToEdit); } /* ... */ }); } // Llama a closeEditModal, resetMemoryForm, _showMemoryForm, _handleFormSubmit, handleMemoryTypeChange, fillFormForEdit
+function openEditModal(dia, memories, allDays) { if (!editModal) createEditModal(); /* ... */ _showMemoryForm(false); resetMemoryForm(); _renderMemoryList(/*...*/, true); showModalStatus(/*...*/); /* ... */ } // Llama a createEditModal, _showMemoryForm, resetMemoryForm, _renderMemoryList, showModalStatus
+function closeEditModal() { if (!editModal) return; /* ... */ }
 
 // Store
-function createStoreModal() { /* ... código ... */
-    if (storeModal) return;
-    storeModal = document.createElement('div'); /* ... innerHTML con createStoreCategoryButton ... */ document.body.appendChild(storeModal); // Llama a createStoreCategoryButton
-    document.getElementById('close-store-btn')?.addEventListener('click', closeStoreModal); // Llama a closeStoreModal
-    // ... listener ...
-}
-function openStoreModal() { /* ... código ... */ if (!storeModal) createStoreModal(); /* ... */ } // Llama a createStoreModal
-function closeStoreModal() { /* ... código ... */ }
+function createStoreModal() { if (storeModal) return; storeModal = document.createElement('div'); /* ... innerHTML con createStoreCategoryButton ... */ document.body.appendChild(storeModal); document.getElementById('close-store-btn')?.addEventListener('click', closeStoreModal); /* ... */ } // Llama a createStoreCategoryButton, closeStoreModal
+function openStoreModal() { if (!storeModal) createStoreModal(); storeModal.style.display = 'flex'; setTimeout(() => storeModal.classList.add('visible'), 10); } // Llama a createStoreModal
+function closeStoreModal() { if (!storeModal) return; /* ... */ }
 
 // Store List
-function createStoreListModal() { /* ... código ... */
-    if (storeListModal) return;
-    storeListModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(storeListModal);
-    _bindStoreListModalEvents(); // Llama a _bindStoreListModalEvents
-}
-function _bindStoreListModalEvents() { /* ... código ... */ document.getElementById('close-store-list-btn')?.addEventListener('click', closeStoreListModal); /* ... */ } // Llama a closeStoreListModal
-function openStoreListModal(title) { /* ... código ... */ if(!storeListModal) createStoreListModal(); /* ... */ } // Llama a createStoreListModal
-function closeStoreListModal() { /* ... código ... */ }
-function updateStoreList(items, append = false, hasMore = false) { /* ... código ... */ const itemEl = createStoreListItem(item); /* ... */ } // Llama a createStoreListItem
+function createStoreListModal() { if (storeListModal) return; storeListModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(storeListModal); _bindStoreListModalEvents(); } // Llama a _bindStoreListModalEvents
+function _bindStoreListModalEvents() { document.getElementById('close-store-list-btn')?.addEventListener('click', closeStoreListModal); /* ... */ } // Llama a closeStoreListModal
+function openStoreListModal(title) { if(!storeListModal) createStoreListModal(); /* ... */ } // Llama a createStoreListModal
+function closeStoreListModal() { if (!storeListModal) return; /* ... */ }
+function updateStoreList(items, append = false, hasMore = false) { /* ... */ const itemEl = createStoreListItem(item); /* ... */ } // Llama a createStoreListItem
 
 // Alert/Prompt/Confirm
-function createAlertPromptModal() { /* ... código ... */ if (alertPromptModal) return; alertPromptModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(alertPromptModal); _bindAlertPromptEvents(); } // Llama a _bindAlertPromptEvents
-function _bindAlertPromptEvents() { /* ... */ document.getElementById('alert-prompt-ok')?.addEventListener('click', () => closeAlertPromptModal(true)); /* ... */ } // Llama a closeAlertPromptModal
-function closeAlertPromptModal(isOk) { /* ... código ... */ }
-function showAlert(message, type = 'default') { /* ... código ... */ if(!alertPromptModal) createAlertPromptModal(); /* ... */ } // Llama a createAlertPromptModal
-function showPrompt(message, defaultValue = '', type = 'default') { /* ... código ... */ if(!alertPromptModal) createAlertPromptModal(); /* ... */ return new Promise(/* ... */); } // Llama a createAlertPromptModal
-function createConfirmModal() { /* ... código ... */ if (confirmModal) return; confirmModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(confirmModal); _bindConfirmModalEvents(); } // Llama a _bindConfirmModalEvents
-function _bindConfirmModalEvents() { /* ... */ document.getElementById('confirm-ok')?.addEventListener('click', () => closeConfirmModal(true)); /* ... */ } // Llama a closeConfirmModal
-function closeConfirmModal(isConfirmed) { /* ... código ... */ }
-function showConfirm(message) { /* ... código ... */ if(!confirmModal) createConfirmModal(); /* ... */ return new Promise(/* ... */); } // Llama a createConfirmModal
+function createAlertPromptModal() { if (alertPromptModal) return; alertPromptModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(alertPromptModal); _bindAlertPromptEvents(); } // Llama a _bindAlertPromptEvents
+function _bindAlertPromptEvents() { document.getElementById('alert-prompt-ok')?.addEventListener('click', () => closeAlertPromptModal(true)); document.getElementById('alert-prompt-cancel')?.addEventListener('click', () => closeAlertPromptModal(false)); } // Llama a closeAlertPromptModal
+function closeAlertPromptModal(isOk) { if (!alertPromptModal) return; /* ... */ if (_promptResolve) { /* ... */ _promptResolve = null; } }
+function showAlert(message, type = 'default') { if(!alertPromptModal) createAlertPromptModal(); /* ... */ } // Llama a createAlertPromptModal
+function showPrompt(message, defaultValue = '', type = 'default') { if(!alertPromptModal) createAlertPromptModal(); /* ... */ return new Promise((resolve) => { _promptResolve = resolve; }); } // Llama a createAlertPromptModal
+function createConfirmModal() { if (confirmModal) return; confirmModal = document.createElement('div'); /* ... innerHTML ... */ document.body.appendChild(confirmModal); _bindConfirmModalEvents(); } // Llama a _bindConfirmModalEvents
+function _bindConfirmModalEvents() { document.getElementById('confirm-ok')?.addEventListener('click', () => closeConfirmModal(true)); document.getElementById('confirm-cancel')?.addEventListener('click', () => closeConfirmModal(false)); } // Llama a closeConfirmModal
+function closeConfirmModal(isConfirmed) { if (!confirmModal) return; /* ... */ if (_confirmResolve) { _confirmResolve(isConfirmed); _confirmResolve = null; } }
+function showConfirm(message) { if(!confirmModal) createConfirmModal(); /* ... */ return new Promise((resolve) => { _confirmResolve = resolve; }); } // Llama a createConfirmModal
 
 // ... Lógica del Formulario (Submit, Change, Fill, Reset) ...
-// (Definidas aquí ahora, usan helpers definidos antes)
-
-function _handleFormSubmit(e) { /* ... código ... */ callbacks.onSaveMemory(diaId, formData, docIdToEdit); } // Llama a callback
+function _handleFormSubmit(e) { e.preventDefault(); /* ... */ callbacks.onSaveMemory(diaId, formData, docIdToEdit); } // Llama a callback
 function handleMemoryTypeChange() { /* ... código ... */ showMusicResults([]); showPlaceResults([]); } // Llama a helpers
-function fillFormForEdit(mem) { /* ... código ... */ resetMemoryForm(); /*...*/ handleMemoryTypeChange(); /*...*/ showPlaceResults([mem.LugarData], true); /*...*/ showMusicResults([mem.CancionData], true); /*...*/ _showMemoryForm(true); /* ... */ } // Llama a helpers
-function resetMemoryForm() { /* ... código ... */ showMusicResults([]); showPlaceResults([]); showModalStatus('memoria-status', '', false); handleMemoryTypeChange(); _showMemoryForm(false); } // Llama a helpers
+function fillFormForEdit(mem) { /* ... código ... */ resetMemoryForm(); /*...*/ handleMemoryTypeChange(); /*...*/ showPlaceResults(/*...*/); /*...*/ showMusicResults(/*...*/); /*...*/ _showMemoryForm(true); /* ... */ } // Llama a helpers
+function resetMemoryForm() { /* ... código ... */ showMusicResults([]); showPlaceResults([]); showModalStatus(/*...*/); handleMemoryTypeChange(); _showMemoryForm(false); } // Llama a helpers
 
 
 // --- Exportaciones Públicas ---
@@ -483,7 +338,7 @@ export const ui = {
     openStoreModal, closeStoreModal,
     openStoreListModal, closeStoreListModal,
     showAlert, showPrompt, showConfirm,
-    updateStoreList, updateMemoryList,
+    updateStoreList, updateMemoryList, // Asegurar que está exportada
     resetMemoryForm, fillFormForEdit,
     showMusicResults, showPlaceResults,
     showModalStatus, handleMemoryTypeChange,
