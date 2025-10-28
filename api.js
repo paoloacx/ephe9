@@ -1,6 +1,6 @@
 /* api.js */
 /* Módulo para gestionar llamadas a APIs externas (iTunes, Nominatim) */
-/* (v1.2 - Cambiado proxy de iTunes por 'thingproxy') */
+/* (v1.3 - Revertido a allorigins.win con endpoint .get) */
 
 /**
  * Busca canciones en la API de iTunes.
@@ -8,29 +8,38 @@
  * @returns {Promise<object>} La respuesta JSON de la API.
  */
 export async function searchiTunes(term) {
-    // CAMBIO: Se usa un proxy CORS diferente ('thingproxy')
-    const proxy = 'https://thingproxy.freeboard.io/fetch/';
+    // CAMBIO: Volver a allorigins, pero usando el endpoint .get?url= que es más estable
+    const proxy = 'https://api.allorigins.win/get?url=';
     
     // La URL de iTunes que queremos consultar
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=song&limit=5`;
     
-    // La URL final para thingproxy (no se codifica la URL de iTunes)
-    const fetchUrl = proxy + url;
+    // La URL de iTunes DEBE estar codificada para allorigins
+    const fetchUrl = proxy + encodeURIComponent(url);
     
     try {
         const response = await fetch(fetchUrl);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // thingproxy devuelve JSON directamente
-        return await response.json(); 
+        
+        // allorigins envuelve la respuesta en su propio JSON
+        const data = await response.json();
+        
+        if (!data.contents) {
+             throw new Error("Respuesta inválida del proxy (no se encontró 'contents').");
+        }
+        
+        // El contenido (data.contents) es el JSON de iTunes, pero como string. Hay que parsearlo.
+        return JSON.parse(data.contents);
+
     } catch (error) {
         console.error('iTunes API Error:', error);
-        // Si el error es de parseo, puede que thingproxy fallara
         if (error instanceof SyntaxError) {
-             throw new Error("Error al parsear la respuesta del proxy. El proxy puede estar caído.");
+             throw new Error("Error al parsear la respuesta de iTunes (data.contents).");
         }
-        throw error; // Lanza el error para que el controlador lo coja
+        // Si el fetch falla (como el ERR_NAME_NOT_RESOLVED) o el proxy falla
+        throw new Error(`Fallo en la API/Proxy: ${error.message}`);
     }
 }
 
