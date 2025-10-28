@@ -802,7 +802,7 @@ function closeAlertPromptModal(isOk) {
     alertPromptModal.classList.remove('visible');
     setTimeout(() => {
         alertPromptModal.style.display = 'none';
-        alertPromptModal.querySelector('.modal-alert-content').classList.remove('settings-alert');
+        alertPromptModal.querySelector('.modal-alert-content').classList.remove('settings-alert', 'search-alert');
     }, 200);
 
     if (_promptResolve) {
@@ -820,10 +820,9 @@ function showAlert(message, type = 'default') {
     if(!alertPromptModal) createAlertPromptModal();
     const contentEl = alertPromptModal.querySelector('.modal-alert-content');
 
+    contentEl.classList.remove('settings-alert', 'search-alert');
     if (type === 'settings') {
         contentEl.classList.add('settings-alert');
-    } else {
-        contentEl.classList.remove('settings-alert');
     }
 
     document.getElementById('alert-prompt-message').textContent = message;
@@ -837,10 +836,14 @@ function showAlert(message, type = 'default') {
     setTimeout(() => alertPromptModal.classList.add('visible'), 10);
 }
 
-function showPrompt(message, defaultValue = '') {
+function showPrompt(message, defaultValue = '', type = 'default') {
     if(!alertPromptModal) createAlertPromptModal();
     const contentEl = alertPromptModal.querySelector('.modal-alert-content');
-    contentEl.classList.remove('settings-alert'); // Asegurar estilo por defecto
+    
+    contentEl.classList.remove('settings-alert', 'search-alert'); // Limpiar clases
+    if (type === 'search') {
+        contentEl.classList.add('search-alert');
+    }
 
     document.getElementById('alert-prompt-message').textContent = message;
     document.getElementById('alert-prompt-input').style.display = 'block';
