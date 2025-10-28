@@ -1,4 +1,4 @@
-/* style.css - v17.3 - Ajuste color header y tamaño Crumbie */
+/* style.css - v17.4 - Ajuste Calendario, Search Modal y Crumbie */
 @charset "UTF-8";
 
 /* --- Base y Fondo --- */
@@ -353,8 +353,8 @@ main {
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    position: relative;
-    overflow: hidden;
+    position: relative; /* CAMBIO: Añadido para ::before */
+    overflow: hidden; /* CAMBIO: Añadido para ::before */
     transition: background-color 0.1s, transform 0.1s;
 }
 .dia-btn:active {
@@ -367,18 +367,14 @@ main {
     font-weight: bold;
     color: #444;
     line-height: 1;
-    margin-top: 0; /* Sin margen */
+    margin-top: 10px; /* CAMBIO: Movido aquí */
     z-index: 2;
     position: relative;
 }
 .dia-btn .nombre-especial { display: none; }
 
-/* Barra roja para el día de HOY (Original v15.6) */
-.dia-btn-today {
-    position: relative;
-    overflow: hidden;
-}
-.dia-btn-today::before {
+/* CAMBIO v17.4: Barra roja para TODOS los días */
+.dia-btn::before {
     content: '';
     position: absolute;
     top: 0;
@@ -389,9 +385,9 @@ main {
     border-bottom: 1px solid #c62828;
     border-radius: 8px 8px 0 0; /* Borde redondeado arriba */
 }
+/* El día de HOY solo cambia el color del texto */
 .dia-btn-today .dia-numero {
     color: #c62828; /* Rojo */
-    margin-top: 10px; /* Bajarlo */
 }
 
 /* Esquina doblada (Dog-ear) - ABAJO DERECHA (v15.6 RESTAURADO) */
@@ -412,7 +408,7 @@ main {
 }
 /* Ajuste para hoy */
 .dia-btn-today.tiene-memorias::after {
-    border-color: transparent transparent #ff9e9e transparent; /* Color del pliegue (rojo claro) */
+    border-color: transparent transparent #ff9e9e transparent; /* Color del pliegie (rojo claro) */
     background: linear-gradient(-135deg, transparent 50%, #d9534f 50%); /* Fondo rojo */
 }
 
@@ -495,6 +491,48 @@ main {
 }
 .modal-alert-content.settings-alert .modal-main-buttons button:active {
     background-color: rgba(0,0,0,0.2);
+}
+
+/* CAMBIO v17.4: Estilo para modal de Búsqueda */
+.modal-alert-content.search-alert {
+     background: linear-gradient(to bottom, #748496 0%, #4f6174 100%);
+     border: 1px solid #3c4a5a;
+     color: white;
+     text-shadow: 0 -1px 0 rgba(0,0,0,0.4);
+}
+.modal-alert-content.search-alert p {
+    color: white; /* Texto blanco para párrafo */
+    text-shadow: 0 -1px 0 rgba(0,0,0,0.4);
+}
+.modal-alert-content.search-alert input {
+    background-color: rgba(0,0,0,0.3);
+    border: 1px solid #222;
+    border-radius: 5px;
+    color: #fff;
+    padding: 10px;
+    margin: 0 20px 15px 20px;
+    width: calc(100% - 40px);
+    box-sizing: border-box;
+    box-shadow: inset 0 1px 2px rgba(0,0,0,0.2);
+}
+.modal-alert-content.search-alert .modal-main-buttons {
+    background: none;
+    border-top: 1px solid #3c4a5a;
+    padding: 0;
+}
+.modal-alert-content.search-alert .modal-main-buttons button {
+    color: white;
+    border-left: 1px solid #3c4a5a;
+    font-weight: normal;
+    background: none;
+    padding: 12px;
+    font-size: 16px;
+}
+.modal-alert-content.search-alert .modal-main-buttons button:active {
+    background-color: rgba(0,0,0,0.2);
+}
+.modal-alert-content.search-alert .modal-main-buttons button:first-child {
+    border-left: none; /* El botón de Cancelar */
 }
 
 
