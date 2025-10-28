@@ -1,5 +1,5 @@
 /*
- * ui.js (v4.19 - Rediseño Modal Edición para arreglar tamaño y funcionalidad)
+ * ui.js (v4.19.1 - Debugging missing edit buttons)
  * Módulo de interfaz de usuario.
  */
 
@@ -25,7 +25,7 @@ let storeListModal = null;
 // --- Funciones de Inicialización ---
 
 function init(mainCallbacks) {
-    console.log("UI Module init (v4.19 - Modal Redesign)");
+    console.log("UI Module init (v4.19.1 - Debugging missing edit buttons)");
     callbacks = mainCallbacks;
 
     _bindHeaderEvents();
@@ -211,12 +211,12 @@ function updateSpotlight(dateString, dayName, memories) {
     memories.forEach(mem => {
         const itemEl = document.createElement('div');
         itemEl.className = 'spotlight-memory-item';
-        
+
         // Añadir clase para truncado CSS
         if (mem.Tipo === 'Texto') {
             itemEl.classList.add('spotlight-item-text');
         }
-        
+
         itemEl.innerHTML = createMemoryItemHTML(mem, false);
 
         itemEl.addEventListener('click', () => {
@@ -341,7 +341,7 @@ function createEditModal() {
                         <button id="save-name-btn" class="aqua-button">Guardar Nombre</button>
                         <p id="save-status" class="status-message"></p>
                     </div>
-                    
+
                     <div class="modal-section memorias-section">
                         <h4>Memorias</h4>
                         <div id="edit-memorias-list-container">
@@ -447,7 +447,7 @@ function _bindEditModalEvents() {
         resetMemoryForm(); // Limpia el formulario
         _showMemoryForm(true); // Muestra el formulario
     });
-    
+
     document.getElementById('btn-cancel-mem-edit')?.addEventListener('click', () => {
         _showMemoryForm(false); // Oculta el formulario
     });
@@ -524,7 +524,7 @@ function _bindEditModalEvents() {
 function _showMemoryForm(show) {
     const form = document.getElementById('memory-form');
     const listContainer = document.getElementById('edit-memorias-list-container');
-    
+
     if (show) {
         if (form) form.style.display = 'block';
         if (listContainer) listContainer.style.display = 'none';
@@ -583,7 +583,7 @@ function openEditModal(dia, memories, allDays) {
         const todayId = `${(today.getMonth() + 1).toString().padStart(2, '0')}-${today.getDate().toString().padStart(2, '0')}`;
         daySelect.value = todayId;
     }
-    
+
     // CAMBIO v17.0: Asegurarse de que el formulario esté oculto al abrir
     _showMemoryForm(false);
     resetMemoryForm(); // Limpia el formulario (pero lo deja oculto)
@@ -828,7 +828,7 @@ function showAlert(message, type = 'default') {
     document.getElementById('alert-prompt-message').textContent = message;
     document.getElementById('alert-prompt-input').style.display = 'none';
     document.getElementById('alert-prompt-cancel').style.display = 'none';
-    
+
     const okBtn = document.getElementById('alert-prompt-ok');
     okBtn.textContent = 'OK';
 
@@ -839,7 +839,7 @@ function showAlert(message, type = 'default') {
 function showPrompt(message, defaultValue = '', type = 'default') {
     if(!alertPromptModal) createAlertPromptModal();
     const contentEl = alertPromptModal.querySelector('.modal-alert-content');
-    
+
     contentEl.classList.remove('settings-alert', 'search-alert'); // Limpiar clases
     if (type === 'search') {
         contentEl.classList.add('search-alert');
@@ -957,7 +957,7 @@ function updateMemoryList(memories) {
 
 function createMemoryItemHTML(mem, showActions) {
     if (!mem) return '';
-    const memId = (mem && mem.id) ? mem.id : '';
+    const memId = (mem && mem.id) ? mem.id : ''; // Asegurarse de que memId se define aquí
 
     let yearStr = 'Año desc.';
     if (mem.Fecha_Original) {
@@ -1004,6 +1004,11 @@ function createMemoryItemHTML(mem, showActions) {
 
     if (!artworkHTML) {
         artworkHTML = `<span class="memoria-icon material-icons-outlined">${icon}</span>`;
+    }
+
+    // DEBUG: Comprobar datos al renderizar ítem en lista de edición
+    if (showActions) {
+        console.log("Renderizando ítem (Editar Día):", mem);
     }
 
     const actionsHTML = (showActions && memId) ? `
@@ -1258,7 +1263,7 @@ function resetMemoryForm() {
     showModalStatus('image-upload-status', '', false);
 
     handleMemoryTypeChange();
-    
+
     // Ocultar el formulario y mostrar la lista
     // (Esta función es llamada por onSaveMemory y onCancel)
     _showMemoryForm(false);
