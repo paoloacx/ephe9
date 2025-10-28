@@ -1,6 +1,6 @@
 /* api.js */
 /* Módulo para gestionar llamadas a APIs externas (iTunes, Nominatim) */
-/* (v1.1 - Cambiado proxy de iTunes) */
+/* (v1.2 - Cambiado proxy de iTunes por 'thingproxy') */
 
 /**
  * Busca canciones en la API de iTunes.
@@ -8,28 +8,27 @@
  * @returns {Promise<object>} La respuesta JSON de la API.
  */
 export async function searchiTunes(term) {
-    // CAMBIO: Se usa un proxy CORS diferente y más estable
-    const proxy = 'https://api.allorigins.win/raw?url=';
+    // CAMBIO: Se usa un proxy CORS diferente ('thingproxy')
+    const proxy = 'https://thingproxy.freeboard.io/fetch/';
     
     // La URL de iTunes que queremos consultar
     const url = `https://itunes.apple.com/search?term=${encodeURIComponent(term)}&media=music&entity=song&limit=5`;
     
-    // La URL final debe tener la URL de iTunes codificada como un parámetro para el proxy
-    const fetchUrl = proxy + encodeURIComponent(url);
+    // La URL final para thingproxy (no se codifica la URL de iTunes)
+    const fetchUrl = proxy + url;
     
     try {
         const response = await fetch(fetchUrl);
         if (!response.ok) {
             throw new Error(`HTTP error! status: ${response.status}`);
         }
-        // allorigins devuelve el JSON como texto plano, necesitamos parsearlo
-        const textData = await response.text();
-        return JSON.parse(textData); 
+        // thingproxy devuelve JSON directamente
+        return await response.json(); 
     } catch (error) {
         console.error('iTunes API Error:', error);
-        // Si el error es de parseo, puede que allorigins fallara
+        // Si el error es de parseo, puede que thingproxy fallara
         if (error instanceof SyntaxError) {
-             throw new Error("Error al parsear la respuesta del proxy. Inténtalo de nuevo.");
+             throw new Error("Error al parsear la respuesta del proxy. El proxy puede estar caído.");
         }
         throw error; // Lanza el error para que el controlador lo coja
     }
