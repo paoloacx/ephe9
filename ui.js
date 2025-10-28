@@ -176,23 +176,47 @@ function drawCalendar(monthName, days, todayId) {
     appContent.appendChild(grid);
 }
 
-function updateSpotlight(title, memories) {
+function updateSpotlight(dateString, dayName, memories) {
     const titleEl = document.getElementById('spotlight-date-header');
-    const listEl = document.getElementById('today-memory-spotlight');
+    const listEl = document.getElementById('today-memory-spotlight'); // This is the main box
 
-    if (titleEl) titleEl.textContent = title;
+    if (titleEl) titleEl.textContent = dateString; // Solo la fecha
     if (!listEl) return;
 
-    listEl.innerHTML = '';
+    listEl.innerHTML = ''; // Limpiar la caja principal
+
+    // 1. Añadir el nombre del día (si existe)
+    if (dayName) {
+        const dayNameEl = document.createElement('h3');
+        dayNameEl.className = 'spotlight-day-name';
+        dayNameEl.textContent = `- ${dayName} -`;
+        listEl.appendChild(dayNameEl);
+    }
+
+    // 2. Crear el contenedor para las memorias
+    const containerEl = document.createElement('div');
+    containerEl.id = 'spotlight-memories-container';
+    listEl.appendChild(containerEl);
+
 
     if (!memories || memories.length === 0) {
-        listEl.innerHTML = '<p class="list-placeholder">No hay memorias destacadas.</p>';
+        const placeholder = document.createElement('p');
+        placeholder.className = 'list-placeholder';
+        placeholder.textContent = 'No hay memorias destacadas.';
+        containerEl.appendChild(placeholder);
         return;
     }
 
+    // 3. Añadir memorias al contenedor
     memories.forEach(mem => {
         const itemEl = document.createElement('div');
         itemEl.className = 'spotlight-memory-item';
+        
+        // Añadir clase para truncado CSS
+        if (mem.Tipo === 'Texto') {
+            itemEl.classList.add('spotlight-item-text');
+        }
+        
         itemEl.innerHTML = createMemoryItemHTML(mem, false);
 
         itemEl.addEventListener('click', () => {
@@ -204,7 +228,7 @@ function updateSpotlight(title, memories) {
             }
         });
 
-        listEl.appendChild(itemEl);
+        containerEl.appendChild(itemEl);
     });
 }
 
@@ -971,7 +995,7 @@ function createMemoryItemHTML(mem, showActions) {
         default:
             icon = 'article';
             const desc = mem.Descripcion || 'Nota vacía';
-            contentHTML += desc.length > 50 ? desc.substring(0, 47) + '...' : desc;
+            contentHTML += desc; // CAMBIO: Quitar truncado JS, se hará con CSS
             break;
     }
 
