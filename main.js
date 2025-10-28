@@ -237,7 +237,8 @@ async function handleFooterAction(action) {
             break;
 
         case 'search':
-            const searchTerm = await ui.showPrompt("Buscar en todas las memorias:");
+            // CAMBIO: Añadido tipo 'search' para el estilo del modal
+            const searchTerm = await ui.showPrompt("Buscar en todas las memorias:", '', 'search');
             if (!searchTerm || searchTerm.trim() === '') return;
 
             const term = searchTerm.trim().toLowerCase();
