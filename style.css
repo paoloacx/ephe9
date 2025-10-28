@@ -1,4 +1,4 @@
-/* style.css - v17.1 - Arreglo de Inputs en Modales */
+/* style.css - v17.2 - Arreglo Inputs y Almacén */
 @charset "UTF-8";
 
 /* --- Base y Fondo --- */
@@ -241,7 +241,7 @@ main {
     text-transform: capitalize;
 }
 #today-memory-spotlight {
-    background-color: #f5f5f5; /* Blanco gris claro */
+    background-color: #f5f5f5; /* Blanco gris claro (Diapositiva) */
     border: 1px solid #ccc;
     border-radius: 10px;
     padding: 10px;
@@ -258,25 +258,43 @@ main {
     padding-bottom: 10px;
     border-bottom: 1px dashed #ccc;
 }
+
+/* v17.2: Contenedor interior del spotlight */
+#spotlight-memories-container {
+    background-color: rgba(0, 0, 0, 0.05); /* Fondo "transparente" oscuro */
+    border-radius: 5px;
+    padding: 5px;
+    box-shadow: inset 0 1px 3px rgba(0,0,0,0.2); /* Sombra interior (profundidad) */
+    border-top: 1px solid rgba(0,0,0,0.1);
+    border-bottom: 1px solid rgba(255,255,255,0.1);
+}
+
 .spotlight-memory-item {
     font-size: 14px;
     padding: 10px;
-    border-bottom: 1px solid #ddd; /* Borde claro */
-    background-color: rgba(0,0,0,0.02); /* Fondo muy sutil */
-    color: #333; /* Texto oscuro */
-    margin-bottom: 5px;
-    border-radius: 5px;
+    border-bottom: 1px solid rgba(0,0,0,0.1); /* Borde sutil */
+    background-color: transparent; /* Quitar el fondo de la celda */
+    color: #333;
+    margin-bottom: 0; /* Sin margen */
+    border-radius: 0; /* Sin radius en la celda */
     display: flex;
     align-items: center;
     gap: 8px;
     cursor: pointer;
 }
-.spotlight-memory-item:last-child {
+#spotlight-memories-container .spotlight-memory-item:last-child {
     border-bottom: none;
 }
-.spotlight-memory-item:hover {
-    background-color: rgba(0,0,0,0.05); /* Hover un poco más oscuro */
+#spotlight-memories-container .spotlight-memory-item:hover {
+    background-color: rgba(255, 255, 255, 0.3); /* Hover más claro */
 }
+#spotlight-memories-container .list-placeholder {
+    color: #555;
+    font-style: italic;
+    padding: 15px;
+    text-align: center;
+}
+
 .spotlight-memory-item small {
     display: block;
     color: #777; /* Color de texto secundario */
@@ -837,6 +855,50 @@ main {
     box-sizing: border-box;
 }
 /* --- FIN FIX v17.0 --- */
+
+/* --- INICIO v17.2: Estilos para Modal Almacén --- */
+.store-category-list {
+    display: flex;
+    flex-direction: column; /* Apilar botones verticalmente */
+    padding: 10px;
+    gap: 8px; /* Espacio entre botones */
+}
+.store-category-button {
+    display: flex;
+    align-items: center;
+    background: linear-gradient(to bottom, #fdfdfd 0%, #f0f0f0 100%);
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    padding: 12px 15px;
+    font-size: 16px;
+    color: #333;
+    text-shadow: 0 1px 0 rgba(255,255,255,0.6);
+    cursor: pointer;
+    transition: background-color 0.2s;
+    width: 100%;
+    box-sizing: border-box;
+    text-align: left;
+}
+.store-category-button:hover {
+    background: #f8f8f8;
+}
+.store-category-button:active {
+    background: #e0e0e0;
+}
+.store-category-button .material-icons-outlined:first-child {
+    margin-right: 15px;
+    color: #555;
+    font-size: 24px;
+}
+.store-category-button span:nth-of-type(1) { /* El texto */
+    flex-grow: 1;
+    font-weight: bold;
+}
+.store-category-button .material-icons-outlined:last-child { /* El chevron */
+    color: #aaa;
+    font-size: 24px;
+}
+/* --- FIN v17.2 --- */
 
 
 /* Footer Dock */
