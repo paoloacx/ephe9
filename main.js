@@ -89,8 +89,9 @@ async function loadTodaySpotlight() {
             }
         });
 
-        const fullDateString = `${dateString} ${spotlightData.dayName !== 'Unnamed Day' ? `(${spotlightData.dayName})` : ''}`;
-        ui.updateSpotlight(fullDateString, spotlightData.memories);
+        // CAMBIO: Pasar el nombre del día por separado a la UI
+        const dayName = spotlightData.dayName !== 'Unnamed Day' ? spotlightData.dayName : null;
+        ui.updateSpotlight(dateString, dayName, spotlightData.memories);
     }
 }
 
@@ -248,14 +249,14 @@ async function handleFooterAction(action) {
                 drawCurrentMonth();
 
                 if (results.length === 0) {
-                    ui.updateSpotlight(`No hay resultados para "${term}"`, []);
+                    ui.updateSpotlight(`No hay resultados para "${term}"`, null, []);
                 } else {
                     results.forEach(mem => {
                         if (!mem.Nombre_Dia) {
                             mem.Nombre_Dia = state.allDaysData.find(d => d.id === mem.diaId)?.Nombre_Dia || "Día";
                         }
                     });
-                    ui.updateSpotlight(`Resultados para "${term}" (${results.length})`, results);
+                    ui.updateSpotlight(`Resultados para "${term}" (${results.length})`, null, results);
                 }
             } catch (err) {
                  ui.setLoading(null, false);
