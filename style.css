@@ -1,4 +1,4 @@
-/* style.css - v17.0 - Gran Rediseño de Modales (Arreglo de tamaño y funcionalidad) */
+/* style.css - v17.1 - Arreglo de Inputs en Modales */
 @charset "UTF-8";
 
 /* --- Base y Fondo --- */
@@ -509,6 +509,8 @@ main {
     color: #555;
     font-weight: bold;
     font-size: 15px;
+    display: block; /* Asegurar que la etiqueta esté en su propia línea */
+    margin-bottom: 2px;
 }
 .memorias-section {
     border-top: none;
@@ -531,6 +533,37 @@ main {
 #btn-name-selected-day {
     flex-shrink: 0; /* El botón no se encoge */
 }
+
+
+/* --- INICIO v17.1: Estilos de Formulario (iOS-like) --- */
+.modal-section input[type="text"],
+.modal-section input[type="number"],
+.modal-section input[type="file"],
+.modal-section select,
+.modal-section textarea {
+    width: 100%;
+    padding: 10px;
+    margin: 5px 0 15px 0;
+    border: 1px solid #ccc;
+    border-radius: 8px; /* Esquinas redondeadas iOS */
+    box-sizing: border-box; /* Importante para que padding no rompa el width */
+    font-size: 16px;
+    background-color: #fff;
+    -webkit-appearance: none; /* Quitar estilos nativos */
+    appearance: none;
+}
+
+.modal-section textarea {
+    min-height: 80px;
+    resize: vertical;
+}
+
+/* Override para select y botón en la misma línea */
+.day-selection-controls select,
+.day-selection-controls input {
+    width: auto; /* Dejar que flexbox maneje el ancho */
+}
+/* --- FIN v17.1 --- */
 
 
 /* Cabecera Modal Preview (y ahora también Edit, Store) */
